@@ -10,8 +10,40 @@ license: MIT, see LICENSE for more details.
 
 """
 
+from time import sleep
+
 import requests
 import requests_cache
+
+
+def _api_request(*, api_endpoint):
+    """Add http headers and makes GET request to specified API endpoint.
+
+    Parameters
+    ----------
+    api_endpoint : str
+        A string representing the target API endpoint for the request.
+
+    Returns
+    -------
+    dict
+        Decoded JSON from API response.
+
+    """
+
+    base_url = "https://api.wdpro.disney.go.com"
+    request_url = "".join([base_url, api_endpoint])
+    headers = {"Accept": "application/json;apiversion=1;charset=UTF-8"}
+    # TODO: Replace ugly retry loop.
+    for i in range(1, 6):  # Make 5 attemts to get a valid response.
+        headers["Authorization"] = _fetch_access_token()
+        r = requests.get(request_url, headers=headers)
+        if r.status_code == 200:
+            return r.json()
+        elif r.status_code == 401:  # Unauthorized
+            requests_cache.core.clear()
+        else:
+            sleep((i ** 4) / 100)  # Sleeps for 0.01, 0.16, 0.81, 2.56 and 6.25 seconds.
 
 
 def _fetch_access_token():
@@ -40,3 +72,24 @@ def _fetch_access_token():
         return f"{auth_data['token_type']} {auth_data['access_token']}"
     else:
         return None
+
+
+def _fetch_experience_data(*, park_id):
+    """Uses `_api_request` to call the '/{park_id}/wait-times' enpoint.
+
+    Parameters
+    ----------
+    park_id : str
+        ID number of a park.
+
+    Returns
+    -------
+      dict containing attraction & entertainment records from API response.
+
+    """
+
+    api_endpoint = f"/facility-service/theme-parks/{park_id}/wait-times"
+    api_response = _api_request(api_endpoint=api_endpoint)
+
+    if api_response:
+        return api_response["entries"]
