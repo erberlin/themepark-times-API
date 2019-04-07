@@ -8,7 +8,12 @@ license: MIT, see LICENSE for more details.
 
 from unittest import mock
 
-from etl_worker.tasks import _api_request, _fetch_access_token, _fetch_experience_data
+from etl_worker.tasks import (
+    _api_request,
+    _fetch_access_token,
+    _fetch_experience_data,
+    update_experiences,
+)
 
 
 @mock.patch("requests.get")
@@ -99,3 +104,11 @@ def test__fetch_experience_data_returns_json_entries_key(mock_api_request_func):
 
     data = _fetch_experience_data(park_id=park_id)
     assert data == sample_data["entries"]
+
+
+@mock.patch("etl_worker.tasks._fetch_experience_data")
+def test_update_experiences_count(mock_fetch_experience_data):
+    """Calls `_fetch_experience_data` 6 times."""
+
+    update_experiences()
+    assert mock_fetch_experience_data.call_count == 6

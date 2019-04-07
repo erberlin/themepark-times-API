@@ -15,6 +15,21 @@ from time import sleep
 import requests
 import requests_cache
 
+parks = {
+    "80007944": {"name": "Magic Kingdom Park", "slug": "magic-kingdom"},
+    "80007838": {"name": "Epcot", "slug": "epcot"},
+    "80007998": {"name": "Disney's Hollywood Studios", "slug": "hollywood-studios"},
+    "80007823": {
+        "name": "Disney's Animal Kingdom Theme Park",
+        "slug": "animal-kingdom",
+    },
+    "330339": {"name": "Disneyland Park", "slug": "disneyland"},
+    "336894": {
+        "name": "Disney California Adventure Park",
+        "slug": "disney-california-adventure",
+    },
+}
+
 
 def _api_request(*, api_endpoint):
     """Add http headers and makes GET request to specified API endpoint.
@@ -93,3 +108,10 @@ def _fetch_experience_data(*, park_id):
 
     if api_response:
         return api_response["entries"]
+
+
+def update_experiences():
+    """Pull new experience data and update database for all parks."""
+
+    for park_id in parks.keys():
+        _fetch_experience_data(park_id=park_id)
