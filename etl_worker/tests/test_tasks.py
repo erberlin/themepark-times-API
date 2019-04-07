@@ -12,6 +12,7 @@ from etl_worker.tasks import (
     _api_request,
     _fetch_access_token,
     _fetch_experience_data,
+    _process_experience_data,
     update_experiences,
 )
 
@@ -106,9 +107,51 @@ def test__fetch_experience_data_returns_json_entries_key(mock_api_request_func):
     assert data == sample_data["entries"]
 
 
+@mock.patch("etl_worker.tasks._process_experience_data")
 @mock.patch("etl_worker.tasks._fetch_experience_data")
-def test_update_experiences_count(mock_fetch_experience_data):
+def test_update_experiences_count(mock_fetch_data, mock_process_data):
     """Calls `_fetch_experience_data` 6 times."""
 
     update_experiences()
-    assert mock_fetch_experience_data.call_count == 6
+    assert mock_fetch_data.call_count == 6
+    assert mock_process_data.call_count == 6
+
+
+def test__process_experience_data():
+    """Veryfy correct transformation of returned data."""
+    input_data = [
+        {
+            "links": {
+                "self": {"href": "https://api.wdpro.disney.go.com/..."},
+                "attractions": {"href": "https://api.wdpro.disney.go.com/..."},
+            },
+            "id": "12345678;entityType=Attraction",
+            "name": "Ride A",
+            "type": "Attraction",
+            "waitTime": {
+                "fastPass": {"available": True},
+                "status": "Operating",
+                "singleRider": False,
+                "postedWaitMinutes": 5,
+                "rollUpStatus": "Operating",
+                "rollUpWaitTimeMessage": "Short Wait Times",
+            },
+        }
+    ]
+    expected_output = {
+        "12345678": {
+            "id": "12345678",
+            "name": "Ride A",
+            "type": "Attraction",
+            "statusInfo": {
+                "fastPass": {"available": True},
+                "status": "Operating",
+                "singleRider": False,
+                "postedWaitMinutes": 5,
+                "rollUpStatus": "Operating",
+                "rollUpWaitTimeMessage": "Short Wait Times",
+            },
+        }
+    }
+    output = _process_experience_data(data=input_data)
+    assert output == expected_output

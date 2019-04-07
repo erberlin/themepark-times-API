@@ -99,19 +99,46 @@ def _fetch_experience_data(*, park_id):
 
     Returns
     -------
-      dict containing attraction & entertainment records from API response.
+    list of dicts
+        Attraction & entertainment records from API response.
 
     """
 
     api_endpoint = f"/facility-service/theme-parks/{park_id}/wait-times"
     api_response = _api_request(api_endpoint=api_endpoint)
-
     if api_response:
         return api_response["entries"]
+
+
+def _process_experience_data(*, data):
+    """Extracts status data from API response.
+
+    Parameters
+    ----------
+    data : list of dicts
+        Attraction & entertainment records from API.
+
+    Returns
+    -------
+    dict
+
+    """
+
+    experiences = {}
+    for entry in data:
+        new_record = {}
+        new_record["id"] = entry["id"].split(";")[0]
+        new_record["name"] = entry["name"]
+        new_record["type"] = entry["type"]
+        new_record["statusInfo"] = entry["waitTime"]
+        experiences[new_record["id"]] = new_record
+    return experiences
 
 
 def update_experiences():
     """Pull new experience data and update database for all parks."""
 
     for park_id in parks.keys():
-        _fetch_experience_data(park_id=park_id)
+        data = _fetch_experience_data(park_id=park_id)
+        if data:
+            _process_experience_data(data=data)
