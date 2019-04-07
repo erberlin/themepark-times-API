@@ -15,6 +15,8 @@ from time import sleep
 import requests
 import requests_cache
 
+from data_access import DBClient
+
 parks = {
     "80007944": {"name": "Magic Kingdom Park", "slug": "magic-kingdom"},
     "80007838": {"name": "Epcot", "slug": "epcot"},
@@ -110,6 +112,22 @@ def _fetch_experience_data(*, park_id):
         return api_response["entries"]
 
 
+def _load_experience_data(*, park_id, data):
+    """Loads experience status data into Redis.
+
+    Parameters
+    ----------
+    park_id : str
+        ID number of park.
+    data : dict of dicts
+        Experience data to load into Redis.
+
+    """
+
+    with DBClient() as DB:
+        DB.write_experience_data(park_id=park_id, data=data)
+
+
 def _process_experience_data(*, data):
     """Extracts status data from API response.
 
@@ -120,7 +138,7 @@ def _process_experience_data(*, data):
 
     Returns
     -------
-    dict
+    dict of dicts
 
     """
 
@@ -141,4 +159,7 @@ def update_experiences():
     for park_id in parks.keys():
         data = _fetch_experience_data(park_id=park_id)
         if data:
-            _process_experience_data(data=data)
+            experience_data = _process_experience_data(data=data)
+        else:
+            continue
+        _load_experience_data(park_id=park_id, data=experience_data)
