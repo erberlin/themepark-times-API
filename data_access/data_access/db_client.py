@@ -28,7 +28,7 @@ class DBClient:
 
     def read_experience(self, *, park_id, experience_id):
         """Read one experience from DB.
-        
+
         Parameters
         ----------
         park_id : str
@@ -43,7 +43,7 @@ class DBClient:
 
     def read_experiences(self, *, park_id):
         """Read all experiences in a park from DB.
-        
+
         Parameters
         ----------
         park_id : str
@@ -60,7 +60,7 @@ class DBClient:
         Deletes the existing hash first and then writes the new data.
         All operations are executed atomically through a pipeline with
         transaction enabled, so that reads won't occur inbetween.
-        
+
         Parameters
         ----------
         park_id : str

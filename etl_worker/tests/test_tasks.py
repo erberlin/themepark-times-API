@@ -12,6 +12,7 @@ from etl_worker.tasks import (
     _api_request,
     _fetch_access_token,
     _fetch_experience_data,
+    _load_experience_data,
     _process_experience_data,
     update_experiences,
 )
@@ -107,14 +108,27 @@ def test__fetch_experience_data_returns_json_entries_key(mock_api_request_func):
     assert data == sample_data["entries"]
 
 
+@mock.patch("data_access.db_client.DBClient.write_experience_data")
+def test__load_experience_data_calls_DBClient(mock_write_experience_data):
+    """Calls `DBClient.write_experience_data` with expected values."""
+
+    park_id = "330339"
+    sample_data = {"12345678": {"A": 1, "B": 2}}
+
+    _load_experience_data(park_id=park_id, data=sample_data)
+    mock_write_experience_data.assert_called_with(park_id=park_id, data=sample_data)
+
+
+@mock.patch("etl_worker.tasks._load_experience_data")
 @mock.patch("etl_worker.tasks._process_experience_data")
 @mock.patch("etl_worker.tasks._fetch_experience_data")
-def test_update_experiences_count(mock_fetch_data, mock_process_data):
-    """Calls `_fetch_experience_data` 6 times."""
+def test_update_experiences_count(mock_fetch_data, mock_process_data, mock_load_data):
+    """Calls functions to fetch, process and load data 6 times."""
 
     update_experiences()
     assert mock_fetch_data.call_count == 6
     assert mock_process_data.call_count == 6
+    assert mock_load_data.call_count == 6
 
 
 def test__process_experience_data():
