@@ -10,6 +10,7 @@ license: MIT, see LICENSE for more details.
 
 """
 
+from datetime import date
 from time import sleep
 
 import requests
@@ -33,13 +34,15 @@ parks = {
 }
 
 
-def _api_request(*, api_endpoint):
+def _api_request(*, api_endpoint, query_string=""):
     """Add http headers and makes GET request to specified API endpoint.
 
     Parameters
     ----------
     api_endpoint : str
-        A string representing the target API endpoint for the request.
+        Target API endpoint for the request.
+    query_string : str, optional
+        URL query string used by `_fetch_park_schedule`.
 
     Returns
     -------
@@ -49,7 +52,7 @@ def _api_request(*, api_endpoint):
     """
 
     base_url = "https://api.wdpro.disney.go.com"
-    request_url = "".join([base_url, api_endpoint])
+    request_url = "".join([base_url, api_endpoint, query_string])
     headers = {"Accept": "application/json;apiversion=1;charset=UTF-8"}
     # TODO: Replace ugly retry loop.
     for i in range(1, 6):  # Make 5 attemts to get a valid response.
@@ -97,12 +100,12 @@ def _fetch_experience_data(*, park_id):
     Parameters
     ----------
     park_id : str
-        ID number of a park.
+        ID number of park.
 
     Returns
     -------
     list of dicts
-        Attraction & entertainment records from API response.
+        Attraction & entertainment data from API response.
 
     """
 
@@ -110,6 +113,28 @@ def _fetch_experience_data(*, park_id):
     api_response = _api_request(api_endpoint=api_endpoint)
     if api_response:
         return api_response["entries"]
+
+
+def _fetch_park_schedule(*, park_id):
+    """Uses `_api_request` to call the '/schedules/{park_id}' enpoint.
+
+    Adds filter for current date to query.
+
+    Parameters
+    ----------
+    park_id : str
+        ID number of park.
+
+    Returns
+    -------
+    dict
+        Park schedule data from API response.
+
+    """
+
+    api_endpoint = f"/facility-service/schedules/{park_id}"
+    query_string = f"?date={date.today().isoformat()}"
+    return _api_request(api_endpoint=api_endpoint, query_string=query_string)
 
 
 def _load_experience_data(*, park_id, data):
@@ -128,8 +153,24 @@ def _load_experience_data(*, park_id, data):
         DB.write_experience_data(park_id=park_id, data=data)
 
 
+def _load_park_schedule(*, park_id, data):
+    """Loads schedule data into Redis.
+
+    Parameters
+    ----------
+    park_id : str
+        ID number of park.
+    data : dict
+        Schedule data for park.
+
+    """
+
+    with DBClient() as DB:
+        return DB.write_park_schedule(park_id=park_id, data=data)
+
+
 def _process_experience_data(*, data):
-    """Extracts status data from API response.
+    """Produce experience records from API data.
 
     Parameters
     ----------
@@ -153,6 +194,33 @@ def _process_experience_data(*, data):
     return experiences
 
 
+def _process_park_schedule(*, data):
+    """Produce park schedule records from API data.
+
+    Parameters
+    ----------
+    data : dict
+        Schedule data for a park.
+
+    Returns
+    -------
+    dict
+
+    """
+
+    park_schedule = {}
+    park_schedule["type"] = "Theme-park"
+    park_schedule["id"] = data["id"]
+    park_schedule["name"] = data["name"]
+    park_schedule["iSO8601TimeZone"] = data["iSO8601TimeZone"]
+    for entry in data["schedules"]:
+        if entry["type"] == "Operating":
+            park_schedule["schedule"] = entry
+            del park_schedule["schedule"]["type"]
+            break
+    return park_schedule
+
+
 def update_experiences():
     """Pull new experience data and update database for all parks."""
 
@@ -163,3 +231,15 @@ def update_experiences():
         else:
             continue
         _load_experience_data(park_id=park_id, data=experience_data)
+
+
+def update_schedules():
+    """Pull new schedule data and update database for all parks."""
+
+    for park_id in parks.keys():
+        data = _fetch_park_schedule(park_id=park_id)
+        if data:
+            schedule_data = _process_park_schedule(data=data)
+        else:
+            continue
+        _load_park_schedule(park_id=park_id, data=schedule_data)
