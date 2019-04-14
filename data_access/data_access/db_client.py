@@ -44,12 +44,13 @@ class DBClient:
 
         Returns
         -------
-        dict
+        str or None
+            JSON encoded string if match is found.
 
         """
 
         db_key = f"{park_id}:experiences"
-        return json.loads(self.r.hget(db_key, experience_id))
+        return self.r.hget(db_key, experience_id)
 
     def read_experiences(self, *, park_id):
         """Read all experiences in a park from DB.
@@ -61,7 +62,8 @@ class DBClient:
 
         Returns
         -------
-        dict of dicts
+        dict
+            Values are JSON encoded strings, if matches are found.
 
         """
 
@@ -78,18 +80,20 @@ class DBClient:
 
         Returns
         -------
-        dict
+        str or None
+            JSON encoded string if match is found.
 
         """
 
-        return json.loads(self.r.hget("parks", park_id))
+        return self.r.hget("parks", park_id)
 
     def read_park_schedules(self):
         """Read all park schedules from DB.
 
         Returns
         -------
-        dict of dicts
+        dict
+            Values are JSON encoded strings, if matches are found.
 
         """
 
