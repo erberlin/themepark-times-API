@@ -38,9 +38,10 @@ def park_schedules_task():
 
 
 if __name__ == "__main__":
+    tasks.update_schedules()
+    tasks.update_experiences()
+
     schedule = sched.scheduler(time.time, time.sleep)
     schedule.enter(UPDATE_FREQ_SCHEDULES, 2, park_schedules_task)
     schedule.enter(UPDATE_FREQ_EXPERIENCES, 1, experiences_task)
     schedule.run()
-    tasks.update_schedules()
-    tasks.update_experiences()
