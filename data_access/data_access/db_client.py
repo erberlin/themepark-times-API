@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 data_access.db_client
-----------------
+---------------------
 This module implements `DBClient` used by the themepark-times-API
 project to interact with Redis.
 
