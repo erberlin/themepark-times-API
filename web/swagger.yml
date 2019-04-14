@@ -1,0 +1,161 @@
+swagger: "2.0"
+info:
+  description: Serves experience (attraction & entertainment) status data along with current schedules for 6 U.S. theme-parks.
+  version: "0.1.0"
+  title: themepark-times-API
+consumes:
+  - "application/json"
+produces:
+  - "application/json"
+
+basePath: "/api"
+
+paths:
+  /parks:
+    get:
+      operationId: endpoints.read_parks
+      tags:
+        - Theme-parks
+      summary: Read all park schedules
+      description: Read schedule data for all parks
+      responses:
+        200:
+          description: Successful read schedules operation
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Park"
+
+  /parks/{park_id}:
+    get:
+      operationId: "endpoints.read_park"
+      tags:
+        - Theme-parks
+      summary: Read one park schedule
+      description: Read schedule data for one park
+      parameters:
+        - name: park_id
+          in: path
+          description: ID number of the park to read
+          type: string
+          required: True
+      responses:
+        200:
+          description: Successful read schedule operation
+          schema:
+            $ref: '#/definitions/Park'
+
+  /parks/{park_id}/experiences:
+    get:
+      operationId: endpoints.read_experiences
+      tags:
+        - Theme-parks
+      summary: Read all experiences from a park
+      description: Read status data for all experiences in park
+      parameters:
+        - name: park_id
+          in: path
+          description: ID number of the park to read experiences from
+          type: string
+          required: True
+        - name: _type
+          in: query
+          description: Type to filter for (attraction or entertainment)
+          type: string
+          required: False
+      responses:
+        200:
+          description: "Successful read experiences operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Experience"
+
+  /parks/{park_id}/experiences/{experience_id}:
+    get:
+      operationId: endpoints.read_experience
+      tags:
+        - Theme-parks
+      summary: Read one experience from a park
+      description: Read status data for one experience in a park
+      parameters:
+        - name: park_id
+          in: path
+          description: ID number of the park to read experience from
+          type: string
+          required: True
+        - name: experience_id
+          in: path
+          description: ID number of experience
+          type: string
+          required: True
+      responses:
+        200:
+          description: Successful read experiences operation
+          schema:
+            $ref: "#/definitions/Experience"
+
+definitions:
+  Park:
+    type: object
+    properties:
+      iSO8601TimeZone:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      schedule:
+        $ref: "#/definitions/ParkSchedule"
+      type:
+        type: string
+
+  ParkSchedule:
+    type: object
+    properties:
+      date:
+        type: string
+      endTime:
+        type: string
+      startTime:
+        type: string
+      timeZone:
+        type: string
+
+  Experience:
+    type: object
+    properties:
+      id:
+        type: "string"
+      name:
+        type: "string"
+      statusInfo:
+        $ref: '#/definitions/StatusInfo'
+      type:
+        type: "string"
+
+  StatusInfo:
+    type: object
+    properties:
+      fastPath:
+        $ref: '#/definitions/FastPass'
+      postedWaitMinutes:
+        type: "integer"
+      rollUpStatus:
+        type: "string"
+      rollUpWaitTimeMessage:
+        type: "string"
+      singleRider:
+        type: "boolean"
+      status:
+        type: "string"
+
+  FastPass:
+    type: object
+    properties:
+      available:
+        type: "boolean"
+      endTime:
+        type: "string"
+      startTime:
+        type: "string"
