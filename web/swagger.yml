@@ -105,12 +105,14 @@ definitions:
         type: string
       name:
         type: string
-      schedule:
-        $ref: "#/definitions/ParkSchedule"
+      schedules:
+        type: "array"
+        items:
+          $ref: "#/definitions/ParkSchedules"
       type:
         type: string
 
-  ParkSchedule:
+  ParkSchedules:
     type: object
     properties:
       date:
@@ -120,6 +122,8 @@ definitions:
       startTime:
         type: string
       timeZone:
+        type: string
+      type:
         type: string
 
   Experience:

@@ -6,7 +6,6 @@ license: MIT, see LICENSE for more details.
 
 """
 
-from datetime import date
 from unittest import mock
 
 from etl_worker.tasks import (
@@ -117,11 +116,9 @@ def test__fetch_experience_data_returns_json_entries_key(mock_api_request_func):
 def test__fetch_park_schedule_calls_api_request(mock_api_request_func):
     """Calls `_api_request` with expected values."""
 
-    iso_date = date.today().isoformat()
-
     park_id = "12345678"
     expected_endpoint = f"/facility-service/schedules/{park_id}"
-    expected_query_string = f"?date={iso_date}"
+    expected_query_string = "?days=0"
 
     _fetch_park_schedule(park_id=park_id)
     mock_api_request_func.assert_called_with(
@@ -207,10 +204,24 @@ def test__process_park_schedule():
                 "endTime": "15:00:00",
                 "startTime": "17:00:00",
                 "timeZone": "PDT",
-                "type": "Special event",
+                "type": "Special event1",
             },
             {
                 "date": "2019-01-01",
+                "endTime": "00:00:00",
+                "startTime": "08:00:00",
+                "timeZone": "PDT",
+                "type": "Operating",
+            },
+            {
+                "date": "2019-01-02",
+                "endTime": "07:00:00",
+                "startTime": "08:00:00",
+                "timeZone": "PDT",
+                "type": "Special event2",
+            },
+            {
+                "date": "2019-01-02",
                 "endTime": "00:00:00",
                 "startTime": "08:00:00",
                 "timeZone": "PDT",
@@ -223,12 +234,22 @@ def test__process_park_schedule():
         "iSO8601TimeZone": "America/Los_Angeles",
         "id": "330339",
         "name": "Disneyland Park",
-        "schedule": {
-            "date": "2019-01-01",
-            "endTime": "00:00:00",
-            "startTime": "08:00:00",
-            "timeZone": "PDT",
-        },
+        "schedules": [
+            {
+                "date": "2019-01-02",
+                "endTime": "07:00:00",
+                "startTime": "08:00:00",
+                "timeZone": "PDT",
+                "type": "Special event2",
+            },
+            {
+                "date": "2019-01-02",
+                "endTime": "00:00:00",
+                "startTime": "08:00:00",
+                "timeZone": "PDT",
+                "type": "Operating",
+            },
+        ],
         "type": "Theme-park",
     }
     output = _process_park_schedule(data=input_data)

@@ -10,7 +10,6 @@ license: MIT, see LICENSE for more details.
 
 """
 
-from datetime import date
 from time import sleep
 
 import requests
@@ -133,7 +132,7 @@ def _fetch_park_schedule(*, park_id):
     """
 
     api_endpoint = f"/facility-service/schedules/{park_id}"
-    query_string = f"?date={date.today().isoformat()}"
+    query_string = "?days=0"
     return _api_request(api_endpoint=api_endpoint, query_string=query_string)
 
 
@@ -213,11 +212,14 @@ def _process_park_schedule(*, data):
     park_schedule["id"] = data["id"]
     park_schedule["name"] = data["name"]
     park_schedule["iSO8601TimeZone"] = data["iSO8601TimeZone"]
-    for entry in data["schedules"]:
-        if entry["type"] == "Operating":
-            park_schedule["schedule"] = entry
-            del park_schedule["schedule"]["type"]
-            break
+    # Returned schedules are sorted by date, and with a 'days=0' filter
+    # the most recent (and last) date will be the current local date.
+    current_local_date = data["schedules"][-1]["date"]
+    park_schedule["schedules"] = [
+        schedule
+        for schedule in data["schedules"]
+        if schedule["date"] == current_local_date
+    ]
     return park_schedule
 
 
