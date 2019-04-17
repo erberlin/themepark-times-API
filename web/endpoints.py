@@ -18,7 +18,7 @@ unspecified = object()
 def read_parks():
     """Handler for /parks endpoint.
 
-    Retrieves schedule data for all parks from database.
+    Retrieves data for all parks from database.
 
     Returns
     -------
@@ -27,25 +27,25 @@ def read_parks():
     Raises
     ------
     werkzeug.exceptions.NotFound
-        If no park schedules are found.
+        If no park records are found.
 
     """
 
     with DBClient() as DB:
-        parks_data = DB.read_park_schedules()
+        parks_data = DB.read_parks()
     response = []
     for _, data in parks_data.items():
         response.append(json.loads(data))
     if response:
         return response
     else:
-        abort(404, f"No park schedules found.")
+        abort(404, f"No park records found.")
 
 
 def read_park(park_id):
     """Handler for /parks/{park_id} endpoint.
 
-    Retrieves schedule data for the specified park from database.
+    Retrieves data for the specified park from database.
 
     Parameters
     ----------
@@ -64,7 +64,7 @@ def read_park(park_id):
     """
 
     with DBClient() as DB:
-        park_data = DB.read_park_schedule(park_id=park_id)
+        park_data = DB.read_park(park_id=park_id)
     if park_data:
         return json.loads(park_data)
     else:

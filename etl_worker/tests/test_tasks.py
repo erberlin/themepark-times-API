@@ -12,13 +12,13 @@ from etl_worker.tasks import (
     _api_request,
     _fetch_access_token,
     _fetch_experience_data,
-    _fetch_park_schedule,
+    _fetch_park_data,
     _load_experience_data,
-    _load_park_schedule,
+    _load_park_data,
     _process_experience_data,
-    _process_park_schedule,
+    _process_park_data,
     update_experiences,
-    update_schedules,
+    update_parks,
 )
 
 
@@ -113,14 +113,14 @@ def test__fetch_experience_data_returns_json_entries_key(mock_api_request_func):
 
 
 @mock.patch("etl_worker.tasks._api_request")
-def test__fetch_park_schedule_calls_api_request(mock_api_request_func):
+def test__fetch_park_data_calls_api_request(mock_api_request_func):
     """Calls `_api_request` with expected values."""
 
     park_id = "12345678"
     expected_endpoint = f"/facility-service/schedules/{park_id}"
     expected_query_string = "?days=0"
 
-    _fetch_park_schedule(park_id=park_id)
+    _fetch_park_data(park_id=park_id)
     mock_api_request_func.assert_called_with(
         api_endpoint=expected_endpoint, query_string=expected_query_string
     )
@@ -137,15 +137,15 @@ def test__load_experience_data_calls_DBClient(mock_write_experience_data):
     mock_write_experience_data.assert_called_with(park_id=park_id, data=sample_data)
 
 
-@mock.patch("data_access.db_client.DBClient.write_park_schedule")
-def test__load_park_schedule_calls_DBClient(mock_write_park_schedule):
-    """Calls `DBClient.write_park_schedule` with expected values."""
+@mock.patch("data_access.db_client.DBClient.write_park_data")
+def test__load_park_data_calls_DBClient(mock_write_park_data):
+    """Calls `DBClient.write_park_data` with expected values."""
 
     park_id = "12345678"
     sample_data = {"sample": {"A": 1, "B": 2}}
 
-    _load_park_schedule(park_id=park_id, data=sample_data)
-    mock_write_park_schedule.assert_called_with(park_id=park_id, data=sample_data)
+    _load_park_data(park_id=park_id, data=sample_data)
+    mock_write_park_data.assert_called_with(park_id=park_id, data=sample_data)
 
 
 def test__process_experience_data():
@@ -189,7 +189,7 @@ def test__process_experience_data():
     assert output == expected_output
 
 
-def test__process_park_schedule():
+def test__process_park_data():
     """Veryfy correct transformation of returned data."""
 
     input_data = {
@@ -252,7 +252,7 @@ def test__process_park_schedule():
         ],
         "type": "Theme-park",
     }
-    output = _process_park_schedule(data=input_data)
+    output = _process_park_data(data=input_data)
     assert output == expected_output
 
 
@@ -268,15 +268,15 @@ def test_update_experiences_count(mock_fetch_data, mock_process_data, mock_load_
     assert mock_load_data.call_count == 6
 
 
-@mock.patch("etl_worker.tasks._load_park_schedule")
-@mock.patch("etl_worker.tasks._process_park_schedule")
-@mock.patch("etl_worker.tasks._fetch_park_schedule")
-def test_update_schedules_count(
+@mock.patch("etl_worker.tasks._load_park_data")
+@mock.patch("etl_worker.tasks._process_park_data")
+@mock.patch("etl_worker.tasks._fetch_park_data")
+def test_update_parks_count(
     mock_fetch_schedule, mock_process_schedule, mock_load_schedule
 ):
     """Calls functions to fetch, process and load schedules 6 times."""
 
-    update_schedules()
+    update_parks()
     assert mock_fetch_schedule.call_count == 6
     assert mock_process_schedule.call_count == 6
     assert mock_load_schedule.call_count == 6

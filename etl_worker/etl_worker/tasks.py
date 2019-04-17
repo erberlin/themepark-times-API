@@ -41,7 +41,7 @@ def _api_request(*, api_endpoint, query_string=""):
     api_endpoint : str
         Target API endpoint for the request.
     query_string : str, optional
-        URL query string used by `_fetch_park_schedule`.
+        URL query string used by `_fetch_park_data`.
 
     Returns
     -------
@@ -114,7 +114,7 @@ def _fetch_experience_data(*, park_id):
         return api_response["entries"]
 
 
-def _fetch_park_schedule(*, park_id):
+def _fetch_park_data(*, park_id):
     """Uses `_api_request` to call the '/schedules/{park_id}' enpoint.
 
     Adds filter for current date to query.
@@ -127,7 +127,7 @@ def _fetch_park_schedule(*, park_id):
     Returns
     -------
     dict
-        Park schedule data from API response.
+        Park data from API response.
 
     """
 
@@ -137,7 +137,7 @@ def _fetch_park_schedule(*, park_id):
 
 
 def _load_experience_data(*, park_id, data):
-    """Loads experience status data into Redis.
+    """Load experience status data into Redis.
 
     Parameters
     ----------
@@ -152,24 +152,24 @@ def _load_experience_data(*, park_id, data):
         DB.write_experience_data(park_id=park_id, data=data)
 
 
-def _load_park_schedule(*, park_id, data):
-    """Loads schedule data into Redis.
+def _load_park_data(*, park_id, data):
+    """Load park data into Redis.
 
     Parameters
     ----------
     park_id : str
         ID number of park.
     data : dict
-        Schedule data for park.
+        Park data.
 
     """
 
     with DBClient() as DB:
-        return DB.write_park_schedule(park_id=park_id, data=data)
+        return DB.write_park_data(park_id=park_id, data=data)
 
 
 def _process_experience_data(*, data):
-    """Produce experience records from API data.
+    """Process experience records from API data.
 
     Parameters
     ----------
@@ -193,13 +193,13 @@ def _process_experience_data(*, data):
     return experiences
 
 
-def _process_park_schedule(*, data):
-    """Produce park schedule records from API data.
+def _process_park_data(*, data):
+    """Process park data from API data.
 
     Parameters
     ----------
     data : dict
-        Schedule data for a park.
+        Park data.
 
     Returns
     -------
@@ -207,20 +207,20 @@ def _process_park_schedule(*, data):
 
     """
 
-    park_schedule = {}
-    park_schedule["type"] = "Theme-park"
-    park_schedule["id"] = data["id"]
-    park_schedule["name"] = data["name"]
-    park_schedule["iSO8601TimeZone"] = data["iSO8601TimeZone"]
+    park_data = {}
+    park_data["type"] = "Theme-park"
+    park_data["id"] = data["id"]
+    park_data["name"] = data["name"]
+    park_data["iSO8601TimeZone"] = data["iSO8601TimeZone"]
     # Returned schedules are sorted by date, and with a 'days=0' filter
     # the most recent (and last) date will be the current local date.
     current_local_date = data["schedules"][-1]["date"]
-    park_schedule["schedules"] = [
+    park_data["schedules"] = [
         schedule
         for schedule in data["schedules"]
         if schedule["date"] == current_local_date
     ]
-    return park_schedule
+    return park_data
 
 
 def update_experiences():
@@ -235,13 +235,13 @@ def update_experiences():
         _load_experience_data(park_id=park_id, data=experience_data)
 
 
-def update_schedules():
-    """Pull new schedule data and update database for all parks."""
+def update_parks():
+    """Pull new park data and update database for all parks."""
 
     for park_id in parks.keys():
-        data = _fetch_park_schedule(park_id=park_id)
+        data = _fetch_park_data(park_id=park_id)
         if data:
-            schedule_data = _process_park_schedule(data=data)
+            park_data = _process_park_data(data=data)
         else:
             continue
-        _load_park_schedule(park_id=park_id, data=schedule_data)
+        _load_park_data(park_id=park_id, data=park_data)

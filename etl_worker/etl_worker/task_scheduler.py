@@ -30,18 +30,18 @@ def experiences_task():
     tasks.update_experiences()
 
 
-def park_schedules_task():
-    """Re-schedule self before executing `tasks.update_schedules`."""
+def parks_task():
+    """Re-schedule self before executing `tasks.update_parks`."""
 
-    schedule.enter(UPDATE_FREQ_SCHEDULES, 2, park_schedules_task)
-    tasks.update_schedules()
+    schedule.enter(UPDATE_FREQ_SCHEDULES, 2, parks_task)
+    tasks.update_parks()
 
 
 if __name__ == "__main__":
-    tasks.update_schedules()
+    tasks.update_parks()
     tasks.update_experiences()
 
     schedule = sched.scheduler(time.time, time.sleep)
-    schedule.enter(UPDATE_FREQ_SCHEDULES, 2, park_schedules_task)
+    schedule.enter(UPDATE_FREQ_SCHEDULES, 2, parks_task)
     schedule.enter(UPDATE_FREQ_EXPERIENCES, 1, experiences_task)
     schedule.run()

@@ -70,8 +70,8 @@ class DBClient:
         db_key = f"{park_id}:experiences"
         return self.r.hgetall(db_key)
 
-    def read_park_schedule(self, park_id):
-        """Read a park schedule from DB.
+    def read_park(self, park_id):
+        """Read one park record from DB.
 
         Parameters
         ----------
@@ -87,8 +87,8 @@ class DBClient:
 
         return self.r.hget("parks", park_id)
 
-    def read_park_schedules(self):
-        """Read all park schedules from DB.
+    def read_parks(self):
+        """Read all park records from DB.
 
         Returns
         -------
@@ -124,7 +124,7 @@ class DBClient:
             )
         pipe.execute()
 
-    def write_park_schedule(self, *, park_id, data):
+    def write_park_data(self, *, park_id, data):
         """Write updated park schedule to DB.
 
         Parameters
