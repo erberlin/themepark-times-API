@@ -1,14 +1,14 @@
 swagger: "2.0"
 info:
-  description: Serves experience (attraction & entertainment) status data along with current schedules for 6 U.S. theme-parks.
+  description: Serves experience (attraction & entertainment) status data along with current schedules for 6 U.S. theme parks.
   version: "0.1.0"
   title: themepark-times-API
 consumes:
-  - "application/json"
+  - application/json
 produces:
-  - "application/json"
+  - application/json
 
-basePath: "/api"
+basePath: /api
 
 paths:
   /parks:
@@ -16,11 +16,11 @@ paths:
       operationId: endpoints.read_parks
       tags:
         - Theme-parks
-      summary: Read all park schedules
+      summary: Read schedules for all parks
       description: Read schedule data for all parks
       responses:
         200:
-          description: Successful read schedules operation
+          description: Successful read parks operation
           schema:
             type: array
             items:
@@ -28,10 +28,10 @@ paths:
 
   /parks/{park_id}:
     get:
-      operationId: "endpoints.read_park"
+      operationId: endpoints.read_park
       tags:
         - Theme-parks
-      summary: Read one park schedule
+      summary: Read schedules for one park
       description: Read schedule data for one park
       parameters:
         - name: park_id
@@ -41,9 +41,9 @@ paths:
           required: True
       responses:
         200:
-          description: Successful read schedule operation
+          description: Successful read park operation
           schema:
-            $ref: '#/definitions/Park'
+            $ref: "#/definitions/Park"
 
   /parks/{park_id}/experiences:
     get:
@@ -65,9 +65,9 @@ paths:
           required: False
       responses:
         200:
-          description: "Successful read experiences operation"
+          description: Successful read experiences operation
           schema:
-            type: "array"
+            type: array
             items:
               $ref: "#/definitions/Experience"
 
@@ -106,7 +106,7 @@ definitions:
       name:
         type: string
       schedules:
-        type: "array"
+        type: array
         items:
           $ref: "#/definitions/ParkSchedules"
       type:
@@ -130,36 +130,36 @@ definitions:
     type: object
     properties:
       id:
-        type: "string"
+        type: string
       name:
-        type: "string"
+        type: string
       statusInfo:
-        $ref: '#/definitions/StatusInfo'
+        $ref: "#/definitions/StatusInfo"
       type:
-        type: "string"
+        type: string
 
   StatusInfo:
     type: object
     properties:
       fastPath:
-        $ref: '#/definitions/FastPass'
+        $ref: "#/definitions/FastPass"
       postedWaitMinutes:
-        type: "integer"
+        type: integer
       rollUpStatus:
-        type: "string"
+        type: string
       rollUpWaitTimeMessage:
-        type: "string"
+        type: string
       singleRider:
-        type: "boolean"
+        type: boolean
       status:
-        type: "string"
+        type: string
 
   FastPass:
     type: object
     properties:
       available:
-        type: "boolean"
+        type: boolean
       endTime:
-        type: "string"
+        type: string
       startTime:
-        type: "string"
+        type: string
