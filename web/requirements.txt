@@ -1,3 +1,5 @@
 connexion
-connexion[swagger-ui]
 flask
+gunicorn
+swagger-ui-bundle
+werkzeug==0.14.1 # > 0.14.1 crashes on reaload in Docker container.
