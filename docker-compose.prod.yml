@@ -1,0 +1,24 @@
+version: '3'
+
+services:
+  etl-worker:
+    build:
+      context: ./
+      dockerfile: ./etl_worker/Dockerfile
+    command: python etl_worker/task_scheduler.py
+
+  nginx:
+    build:
+      context: ./nginx
+    ports:
+      - 80:80
+    depends_on:
+      - web
+
+  web:
+    build:
+      context: ./
+      dockerfile: ./web/Dockerfile
+    expose:
+      - 8000
+    command: gunicorn app:app -b 0.0.0.0:8000
