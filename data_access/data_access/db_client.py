@@ -11,6 +11,7 @@ license: MIT, see LICENSE for more details.
 """
 
 import json
+import os
 import redis
 
 
@@ -19,9 +20,9 @@ class DBClient:
 
     def __init__(self):
         self.r = redis.Redis(
-            host="127.0.0.1",
-            port="6379",
-            password="Aredispassword",
+            host=os.environ["REDIS_HOST"],
+            port=os.environ["REDIS_PORT"],
+            password=os.environ["REDIS_PASSWORD"],
             charset="utf-8",
             decode_responses=True,
         )

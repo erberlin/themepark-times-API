@@ -11,7 +11,9 @@ license: MIT, see LICENSE for more details.
 import connexion
 
 app = connexion.App(__name__, specification_dir="./")
+app.app.url_map.strict_slashes = False
 app.add_api("swagger.yml")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    # FLASK_ENV=development & FLASK_DEBUG=1 w/ Docker don't seem to enable debug mode.
+    app.run(debug=True)

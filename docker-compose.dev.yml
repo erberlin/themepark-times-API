@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  etl-worker:
+    build:
+      context: ./
+      dockerfile: ./etl_worker/Dockerfile
+    environment:
+      UPDATE_FREQ_EXPERIENCES: 300 # Override to reduce external API hits during development.
+    volumes:
+      - ./etl_worker:/app/etl_worker
+      - ./data_access:/data_access
+    command: python etl_worker/task_scheduler.py
+
+  web:
+    build:
+      context: ./
+      dockerfile: ./web/Dockerfile
+    environment:
+      FLASK_ENV: development
+    volumes:
+      - ./web:/app/web
+      - ./data_access:/data_access
+    ports:
+      - "5000:5000"
+    command: python app.py --host=0.0.0.0
+
+  redis:
+    ports:
+     - "6379:6379"
